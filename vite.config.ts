@@ -7,4 +7,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-ui': ['lucide-react', 'recharts'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        }
+      }
+    }
+  }
 })
