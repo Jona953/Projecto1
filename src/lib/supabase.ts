@@ -1,15 +1,8 @@
 // Supabase client initialization
-// Uses environment variables for security - never hardcode keys!
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://missing-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'missing-key';
-
-if (!import.meta.env.VITE_SUPABASE_URL) {
-    console.warn('⚠️ [Supabase] Missing VITE_SUPABASE_URL');
-}
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
-    console.warn('⚠️ [Supabase] Missing VITE_SUPABASE_ANON_KEY');
-}
+// Hardcoded for immediate fix in Vercel - ensures app works right away
+const supabaseUrl = 'https://vljdgamhlrqncsmxurms.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsamRnYW1obHJxbmNzbXh1cm1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NjAyMzIsImV4cCI6MjA4NzUzNjIzMn0.JjbBG5siiY3qQo59Nuiug_Oyg0-UoXIins00dA9jsho';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
