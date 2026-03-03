@@ -12,9 +12,34 @@
 ## 1. Introducción
 **TaskFlow** es una solución integral para la gestión de la productividad personal. A diferencia de las aplicaciones de listas tradicionales, TaskFlow integra elementos de **gamificación** (XP y Niveles) para incentivar la finalización de tareas y utiliza una arquitectura **serverless** para garantizar la disponibilidad y sincronización en tiempo real entre múltiples dispositivos.
 
-## 2. Diagrama de Arquitectura del Sistema
+## 2. Historial de Versiones (Changelog)
 
-La aplicación sigue un modelo de **Arquitectura de Microservicios Backend-as-a-Service (BaaS)**:
+A continuación, se detalla el registro de versiones y los avances realizados en cada etapa del desarrollo:
+
+| Versión | Fecha | Descripción de Cambios |
+|---|---|---|
+| **v0.1** | 24/02/2026 | Inicialización del proyecto con Vite + React y configuración de Tailwind CSS. |
+| **v1.0** | 25/02/2026 | Implementación del sistema de Autenticación (Login/Register) y CRUD básico de tareas conectado a Supabase. |
+| **v1.1** | 26/02/2026 | Adición de Dashboard dinámico, sistema de Gamificación (XP/Levels) y gestión de categorías con colores. |
+| **v1.2** | 27/02/2026 | Corrección de errores de sintaxis TypeScript, configuración de despliegue en Vercel y optimización de archivos (chunks). |
+| **v1.3** | 02/03/2026 | Refinamiento de documentación final, manual de usuario y reporte de contratiempos. |
+
+## 3. Contratiempos Técnicos Superados
+
+Durante el desarrollo del proyecto se presentaron diversos contratiempos que fueron resueltos mediante investigación y pruebas técnicas:
+
+*   **Contratiempo en Verificación de Correo (Gmail):** Al registrar nuevas cuentas, el sistema de Supabase enviaba un correo de confirmación con un link que los usuarios a veces no recibían o no procesaban. Esto causaba errores de "Credenciales Incorrectas" al intentar iniciar sesión.
+    *   *Solución:* Se desactivó la confirmación obligatoria de correo en la configuración de Auth de Supabase para permitir un acceso inmediato.
+*   **Contratiempo en Variables de Entorno (Vercel):** La aplicación mostraba una pantalla negra al desplegarse en producción debido a que las llaves de Supabase no se cargaban correctamente desde el sistema de Vercel.
+    *   *Solución:* Se ajustó el cliente de Supabase para manejar valores por defecto y se realizaron redeploys manuales para asegurar la inyección de secretos.
+*   **Contratiempo en Esquema de Base de Datos:** Existieron pequeñas inconsistencias iniciales al ejecutar el SQL, lo que impedía que las tablas de "profiles" y "tasks" se comunicaran correctamente por permisos de RLS.
+    *   *Solución:* Se refinaron las políticas de seguridad (Row Level Security) para permitir que cada usuario solo acceda a su información de forma aislada.
+*   **Contratiempo en Sincronización Realtime:** La actualización automática no siempre se reflejaba en el Dashboard de forma inmediata.
+    *   *Solución:* Se optimizaron los canales de comunicación de Supabase para escuchar específicamente los eventos de la cuenta activa.
+
+## 4. Arquitectura y Modelo de Datos
+
+La aplicación sigue un modelo de **Arquitectura de Microservicios Backend-as-a-Service (BaaS)** impulsado por PostgreSQL:
 
 ```mermaid
 graph TD
@@ -32,81 +57,13 @@ graph TD
     Vercel -- "Sirve archivos estáticos" --- Client
 ```
 
-### Componentes:
-*   **Frontend:** Desarrollado con Vite, React 18 y TypeScript. Utiliza Tailwind CSS v4 para una interfaz de usuario fluida y oscura.
-*   **Base de Datos:** PostgreSQL hospedado en Supabase, con seguridad a nivel de fila (RLS).
-*   **Sincronización:** Supabase Realtime para actualizaciones sin recargar la página.
+## 5. Manual de Usuario Rápido
 
-## 3. Modelo de Datos (Diagrama ERD)
+1.  **Registro:** Crear una cuenta en la pantalla de "Crear Cuenta".
+2.  **Dashboard:** Visualización del nivel de XP actual y gráficas de actividad.
+3.  **Tareas:** Añadir actividades con prioridades (Alta, Media, Baja) y categorías. Completar una tarea otorga +10 XP.
+4.  **Categorías:** Personalización de etiquetas para organizar el trabajo.
 
-El sistema se basa en tres entidades principales relacionadas:
+## 6. Conclusiones
 
-```mermaid
-erDiagram
-    PROFILES ||--o{ TASKS : "crea"
-    PROFILES ||--o{ CATEGORIES : "define"
-    CATEGORIES ||--o{ TASKS : "clasifica"
-
-    PROFILES {
-        uuid id PK
-        string username
-        int xp
-        int level
-        timestamp created_at
-    }
-
-    TASKS {
-        uuid id PK
-        uuid user_id FK
-        string title
-        text description
-        boolean completed
-        string priority
-        uuid category_id FK
-        date due_date
-        timestamp created_at
-    }
-
-    CATEGORIES {
-        uuid id PK
-        uuid user_id FK
-        string name
-        string color
-        timestamp created_at
-    }
-```
-
-## 4. Funcionalidades Principales
-
-1.  **Dashboard de Estadísticas:** Visualización de KPIs (Indicadores Clave de Desempeño) mediante gráficas de `recharts`.
-2.  **Sistema de Gamificación:**
-    *   **XP (Puntos de Experiencia):** Se otorgan 10 XP por cada tarea completada.
-    *   **Niveles:** El usuario sube de nivel cada 100 XP recolectados.
-    *   **Insignias (Badges):** Desbloqueo automático de logros (Primer paso, Maestro, etc.).
-3.  **Gestión de Categorías:** Personalización de etiquetas con colores específicos (Trabajo, Personal, Estudio, etc.).
-4.  **Filtros Avanzados:** Búsqueda reactiva por texto, prioridad y estado (pendiente/completada).
-
-## 5. Seguridad y Privacidad (RLS)
-Se implementaron políticas de **Row Level Security (RLS)** en PostgreSQL para asegurar que los datos estén aislados por usuario:
-
-```sql
--- Ejemplo de política para Tareas
-CREATE POLICY "Users can only see their own tasks" ON tasks
-    FOR ALL USING (auth.uid() = user_id);
-```
-
-## 6. Manual de Usuario Rápido
-
-1.  **Registro:** Crear cuenta con correo electrónico. (Supabase gestiona el hash de contraseñas de forma segura).
-2.  **Dashboard:** Al entrar, se visualiza el progreso actual y las estadísticas del historial.
-3.  **Tareas:** En la pestaña "Tareas", usar el botón "+" para añadir actividades. Se pueden definir prioridades (Alta/Media/Baja).
-4.  **Categorías:** En la pestaña "Categorías", el usuario puede crear sus propios grupos de trabajo con colores personalizados.
-
-## 7. Conclusiones y Trabajo Futuro
-
-El proyecto demuestra la viabilidad de utilizar tecnologías de "Cero Configuración" de Servidor (Serverless) para crear herramientas de alta escala y bajo costo. Como trabajo futuro, se planea integrar notificaciones Push móviles y calendarios externos (Google Calendar).
-
-## 8. Bibliografía
-*   *React Documentation (2024).* "State and Lifecycle".
-*   *Supabase Docs.* "PostgreSQL Realtime and RLS Policies".
-*   *Tailwind CSS v4.* "Design systems and utility classes".
+El desarrollo de TaskFlow permitió integrar tecnologías modernas de desarrollo web, demostrando que es posible crear aplicaciones robustas y escalables con una arquitectura orientada a la nube. El uso de TypeScript garantizó un código más estable y fácil de mantener frente a los contratiempos encontrados.
